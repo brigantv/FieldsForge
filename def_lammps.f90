@@ -17,6 +17,11 @@
    integer,allocatable              :: topology(:)
    integer                          :: n_mol
    integer                          :: counter
+   double precision                 :: ew_alpha
+   double precision                 :: comp_max
+   double precision                 :: n_max   
+   double precision                 :: V_dir !volume of the cell in the direct space
+
    contains
 
    procedure     :: setup_lammps_lattice
@@ -25,6 +30,7 @@
    procedure     :: get_forces
    procedure     :: grimme_d3
    procedure     :: shift_mol
+   procedure     :: get_ewald
 
   end type lammps_obj
 
@@ -70,7 +76,7 @@
   call lammps_command(this%lmp,"boundary p p p")
   call lammps_command(this%lmp,"atom_style charge")
   call lammps_command(this%lmp,"neighbor 0.3 bin")
-  call lammps_command(this%lmp,"neigh_modify one 10000")
+  call lammps_command(this%lmp,"neigh_modify one 100000 page 1000000")
   call lammps_command(this%lmp,'lattice custom 1.0'&
           //trim(a1)//trim(a2)//trim(a3)//' basis 0 0 0')
   call lammps_command(this%lmp,'region id_1 prism'//trim(region_string)//' units box')
@@ -210,7 +216,7 @@
   call number_bispec(twojmax,components)
   
   !if (.not.associated(this%at_desc)) allocate(this%at_desc(this%nats))
-  !allocate(this%at_desc(this%nats)) 
+  allocate(this%at_desc(this%nats)) 
 
   call lammps_extract_compute(bispec,this%lmp,'bispec',LMP_STYLE_ATOM,LMP_TYPE_ARRAY)
 
@@ -536,11 +542,69 @@ else
  end if
 
 
-end do
+        end do
 
 
 
-end subroutine shift_mol
+        end subroutine shift_mol
 
-end module lammps_class 
+        subroutine get_ewald(this)
+        !subroutine to calculate the ewald contribution when pbc are enforced
+        implicit none
+        class(lammps_obj)                       :: this 
+        double complex                          :: pho
+        double precision                        :: k2
+        double precision                        :: scal_prod
+        double precision                        :: U_rec, U_dir, U_self
+        double complex                          :: z_rec
+        double precision                        :: beta
+        double precision,dimension(3)           :: k
+        integer                                 :: i
+        integer                                 :: j
+        integer                                 :: comp
 
+        !initialization
+        U_rec=0.0d0
+        U_dir=0.0d0
+        U_self=0.0d0
+
+        !Evaluation of the reciprocal term
+        k = (/ 1.0, 0.0, 0.0 /)
+        i=1
+        beta=4.0d0*PI/2.0d0*this%vol
+        
+        !Transformation to fractional coordinates
+        call this%cart2frac
+
+        do while (maxval(k)<this%comp_max)
+        
+         k2=this%dist_rec(k)**2
+         
+         !evaluation of the structure factor
+         pho=0.0d0
+         
+         do j=1,this%nats
+          scal_prod=dot_product(k,this%x(j,:))
+          z_rec=cmplx(0.0,2.0d0*PI*scal_prod)
+          pho=pho+this%charge(j)*exp(z_rec)
+         end do
+         U_rec=U_rec+(abs(pho))**2*exp(-k2/(4.0d0*this%ew_alpha))/k2
+         
+         
+         !lines to increase the modulus of the reciprocal vector
+         comp=mod(i,3)+1
+         k(comp)=k(comp)+1
+         i=i+1
+        
+        end do
+        U_rec=beta*U_rec
+        
+        !Transformation to cartesian coordinates
+        call this%frac2cart
+
+        !Evaluation of the real term
+
+
+        end subroutine get_ewald
+
+        end module lammps_class 
