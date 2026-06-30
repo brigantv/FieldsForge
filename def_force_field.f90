@@ -552,6 +552,12 @@ do i=1,this%object_lammps%nats
  end do
 end do
 
+do i=1, this%object_lammps%nats
+ if (this%fixed_atoms(i)==1) then
+  vel((i-1)*3+1: (i-1)*3+3)=0
+ end if
+end do
+
 call this%get_prediction_err(vec,this%thresh_AL,iter,flag_new_struct,this%flag_energy,&
         this%flag_forces)
 
@@ -585,7 +591,7 @@ do i=1,this%object_lammps%nats
  end do
 end do
 
-temp=(2.0d0*E_kin)/((3.0d0*this%object_lammps%nats-3.0d0)*boltz)
+temp=(2.0d0*E_kin)/((3.0d0*(this%object_lammps%nats-sum(this%fixed_atoms))-3.0d0)*boltz)
 
 open(111, file="etotal_kin_pot_temp_molforge.txt", action="write",position='append')
 
@@ -718,14 +724,14 @@ do i=1,this%object_lammps%nats
  end do
 end do
 
-temp=(2.0d0*E_kin)/(3.0d0*this%object_lammps%nats*boltz)
+temp=(2.0d0*E_kin)/(3.0d0*(this%object_lammps%nats-sum(this%fixed_atoms))*boltz)
 
 if (this%rampa_flag) then
 call this%update_temperature(iter)
 end if
 
-E_kin_new= resamplekin(E_kin,((3.0d0*this%object_lammps%nats-3.d0)/2.0d0)*this%temperature_final &
-        *boltz,(3*this%object_lammps%nats)-3,100.0d0)
+E_kin_new= resamplekin(E_kin,((3.0d0*(this%object_lammps%nats-sum(this%fixed_atoms))-3.d0)/2.0d0)*this%temperature_final &
+        *boltz,(3*(this%object_lammps%nats-sum(this%fixed_atoms)))-3,100.0d0)
 
 
 vel=dsqrt(E_kin_new/E_kin)*vel
@@ -740,7 +746,7 @@ do i=1,this%object_lammps%nats
  end do
 end do
 
-temp=(2.0d0*E_kin)/((3.0d0*this%object_lammps%nats-3.0d0)*boltz)
+temp=(2.0d0*E_kin)/((3.0d0*(this%object_lammps%nats-sum(this%fixed_atoms))-3.0d0)*boltz)
 
 
 if (mod(iter,5)==0) then
