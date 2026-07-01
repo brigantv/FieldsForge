@@ -20,6 +20,7 @@ module input_class
     character(len=200) :: energy_file
     character(len=200) :: forces_file
     character(len=200) :: dipoles_file
+    character(len=200) :: record_file
 
     ! Fit targets
     logical            :: flag_energy
@@ -86,7 +87,7 @@ contains
     ! Namelist mirrors (can't use derived-type fields directly in namelist)
     logical            :: train_ff, VdW_flag, coul_flag, periodic_flag
     integer            :: nconfig
-    character(len=200) :: geometry_file, energy_file, forces_file, dipoles_file
+    character(len=200) :: geometry_file, energy_file, forces_file, dipoles_file,record_file
     logical            :: flag_energy, flag_forces, flag_stress
     character(len=5)   :: set_type_en, set_type_dip
     integer            :: twojmax_en, twojmax_dip
@@ -111,7 +112,8 @@ contains
       R_screen, md_flag, nsteps, timestep, temperature_in,              &
       temperature_final, iseed, minim_flag, lr, max_iter_adam,          &
       active_learn, nconfig_AL, sigma_AL, thresh_AL, factor_thresh,     &
-      n_mol, topology, fixed_atoms, rampa_flag, shift_flag, k_AL, C_M0
+      n_mol, topology, fixed_atoms, rampa_flag, shift_flag, k_AL, C_M0, &
+      record_file
 
     ! Defaults (match the original hardcoded values in main.f90)
     train_ff          = .true.
@@ -123,6 +125,7 @@ contains
     energy_file       = ""
     forces_file       = ""
     dipoles_file      = ""
+    record_file       = ""
     flag_energy       = .true.
     flag_forces       = .true.
     flag_stress       = .false.
@@ -181,6 +184,7 @@ contains
     inp%energy_file       = energy_file
     inp%forces_file       = forces_file
     inp%dipoles_file      = dipoles_file
+    inp%record_file       = record_file
     inp%flag_energy       = flag_energy
     inp%flag_forces       = flag_forces
     inp%flag_stress       = flag_stress
