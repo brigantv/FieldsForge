@@ -16,6 +16,7 @@
   energy_file   = "test_asmita/ener_tr_AL_++"
   forces_file   = "test_asmita/forces_tr_AL_++"
   dipoles_file  = "test_asmita/dipoles_tr_AL_++"
+  record_file   = "test_asmita/Record.txt"
 
   !--------------------------------------------------------------------
   ! What to fit  (set_type: "TRAIN" fits and writes coefficients,
@@ -35,7 +36,7 @@
   twojmax_en = 8
   cutoff_en  = 4.0          ! Angstroms
   lambda_en  = 0.1          ! L2 regularization
-  weight     = 3.464101615      ! relative weight of energies vs forces (sqrt(36*3))
+  !weight     = 3.464101615137754      ! relative weight of energies vs forces
   ezero_en   = .false., .true.
 
   !--------------------------------------------------------------------
@@ -54,8 +55,8 @@
   !--------------------------------------------------------------------
   ! Molecular dynamics
   !--------------------------------------------------------------------
-  md_flag           = .false.
-  nsteps            = 10000
+  md_flag           = .true.
+  nsteps            = 20
   timestep          = 1.0   ! femtoseconds (converted to atomic time units internally)
   temperature_in    = 10.0  ! Kelvin (initial temperature)
   temperature_final = 50.0  ! Kelvin (for thermostat ramp, if rampa_flag = .true.)
@@ -74,9 +75,9 @@
   !   when the uncertainty exceeds thresh_AL. Set nconfig_AL = nconfig
   !   when not running active learning separately.
   !--------------------------------------------------------------------
-  active_learn  = .false.
+  active_learn  =.true.
   nconfig_AL    = 79        ! set to 0 to default to nconfig automatically
-  factor_thresh = 100.0
+  factor_thresh = 10000
 
   !--------------------------------------------------------------------
   ! Molecule topology
@@ -86,7 +87,7 @@
   !--------------------------------------------------------------------
   n_mol      = 1
   topology   = 18*1         ! all 18 atoms belong to molecule 1
-  fixed_atoms = 1, 10*0, 1  ! fix first and last atom
+  fixed_atoms = 0, 10*0, 0  ! fix first and last atom
 
   !--------------------------------------------------------------------
   ! Misc

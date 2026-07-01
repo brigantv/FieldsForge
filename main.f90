@@ -18,7 +18,7 @@
         type(lammps_obj),allocatable              :: set_tmp(:)
         integer                                   :: nconfig,tot_kinds,num_bisp_en,num_bisp_dip,twojmax_dip,twojmax_en
         integer                                   :: i,j
-        character(len=200)                        :: geometry_file,energy_file,dipoles_file,forces_file
+        character(len=200)                        :: geometry_file,energy_file,dipoles_file,forces_file,record_file
         character(len=120)                        :: shift_file,atom_string,shift_geo_file
         logical,dimension(:),allocatable          :: coeff_mask_en,coeff_mask_dip
         double precision                          :: lambda_en,cutoff_en
@@ -101,6 +101,7 @@
         energy_file   = trim(inp%energy_file)
         dipoles_file  = trim(inp%dipoles_file)
         forces_file   = trim(inp%forces_file)
+        record_file   = trim(inp%record_file)
 
         set_type_en  = inp%set_type_en
         set_type_dip = inp%set_type_dip
@@ -342,6 +343,7 @@ end if
         min_force_field%dipoles_file=dipoles_file
         min_force_field%geometry_file=geometry_file
         min_force_field%energy_file=energy_file
+        min_force_field%record_file=record_file
         min_force_field%flag_energy=flag_energy
         min_force_field%flag_forces=flag_forces
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Minimization routine
