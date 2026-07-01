@@ -701,11 +701,13 @@ end do
 
 if (allocated(this%object_lammps%grads)) deallocate(this%object_lammps%grads)
 
-do i=1,this%object_lammps%nats
-if (allocated (this%object_lammps%at_desc(i)%desc)) deallocate(this%object_lammps%at_desc(i)%desc)
-end do
-this%object_lammps%at_desc=> NULL()
-deallocate(this%object_lammps%at_desc)
+if (associated(this%object_lammps%at_desc)) then
+ do i=1,this%object_lammps%nats
+  if (allocated (this%object_lammps%at_desc(i)%desc)) deallocate(this%object_lammps%at_desc(i)%desc)
+ end do
+ deallocate(this%object_lammps%at_desc)
+ this%object_lammps%at_desc=> NULL()
+end if
 
 end subroutine propagate_md
 

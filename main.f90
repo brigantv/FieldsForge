@@ -60,15 +60,15 @@
 
         allocate(min_force_field)
 
-        train_ff=.true.
-        VdW_flag=.true. !refers only to FFs
-        periodic_flag=.false.
-        coul_flag=.true. !refers only to FFs
-        min_force_field%md_flag=.false.
+        train_ff=.false.
+        VdW_flag=.false. !refers only to FFs
+        periodic_flag=.true.
+        coul_flag=.false. !refers only to FFs
+        min_force_field%md_flag=.true.
         min_force_field%temperature_in=10.0d0
         min_force_field%temperature_final=50.0d0
         min_force_field%timestep=1.0d0*41.49d0
-        min_force_field%nsteps=5000
+        min_force_field%nsteps=20
         min_force_field%iseed=[1216,364,1903,4059]
         min_force_field%periodic_flag=.false.
         min_force_field%minim_flag=.false.
@@ -80,20 +80,20 @@
         min_force_field%shift_flag=.false.
         min_force_field%k_AL=0.006d0
         min_force_field%C_M0=3.5d0*A_to_B
-        min_force_field%weight=dsqrt(3.0d0*36.0d0)
+        min_force_field%weight=dsqrt(12.0d0)
 
         !this two flags refer both to minimization and molecular dynamics
-        min_force_field%VdW_flag=.true. 
-        min_force_field%coul_flag=.true.
+        min_force_field%VdW_flag=.false. 
+        min_force_field%coul_flag=.false.
         call getcwd(cwd)
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!INPUT PARAMETERS
-        nconfig=2
-        min_force_field%nconfig_AL=2
+        nconfig=79
+        min_force_field%nconfig_AL=79
 
-        geometry_file="/home/valeriobriganti/SNAP_PBC/naphta_polarization/geo_set.xyz"
-        energy_file="/home/valeriobriganti/SNAP_PBC/naphta_polarization/ener"
-        dipoles_file="/home/valeriobriganti/SNAP_PBC/naphta_polarization/dipoles_set.txt"
-        forces_file="/home/valeriobriganti/SNAP_PBC/naphta_polarization/forces"
+        geometry_file="test_asmita/geo_tr_AL_++"
+        energy_file="test_asmita/ener_tr_AL_++"
+        dipoles_file="test_asmita/forces_tr_AL_++"
+        forces_file="test_asmita/forces_tr_AL_++"
         
         !shift_file="/home/valeriobriganti/Desktop/MolForge_develop/FitSnap/SCO/centers_mass_AL_++"
         
