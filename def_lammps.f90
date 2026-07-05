@@ -537,7 +537,8 @@ end subroutine get_forces
   latVecs(2,:)=this%cell(:,2)*A_to_B
   latVecs(3,:)=this%cell(:,3)*A_to_B
   ! Calculate dispersion and gradients for periodic case
-  if (.not.allocated(this%stress)) allocate(this%stress(3,3))
+  if (allocated(this%stress)) deallocate(this%stress)
+  allocate(this%stress(3,3))
   call dftd3_pbc_dispersion(dftd3, coords, atnum, latVecs, this%edisp, this%grads, this%stress)
   !write(*, "(A)") "*** Dispersion for periodic case"
   !write(*, "(A,ES20.12)") "Energy [au]:", edisp
