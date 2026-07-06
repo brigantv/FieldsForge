@@ -116,13 +116,6 @@ if ((flag_forces).and.(flag_energy)) then
 
 end if
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-open(112,file="vettore_target")
-do i=1,size_ref
-write(112,*) b(i)
-end do
-close(112)
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!REGULARIZATION
 
 if (lambda.ne.0.0) then
@@ -228,17 +221,17 @@ if (flag_forces) then
 end if
 
 !!!!DEBUG
-open(11,file='SNAP_matrix',action='write')
- do i=1,size(A,1)
-  write(11,*) A(i,:)
- end do
-close(11)
+!open(11,file='SNAP_matrix',action='write')
+! do i=1,size(A,1)
+!  write(11,*) A(i,:)
+! end do
+!close(11)
 
-open(11,file='target_values',action='write')
- do i=1,size(b,1)
-  write(11,*) b(i)
- end do
-close(11)
+!open(11,file='target_values',action='write')
+! do i=1,size(b,1)
+!  write(11,*) b(i)
+! end do
+!close(11)
 
 !!!!
 

@@ -62,7 +62,7 @@
         allocate(min_force_field)
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Read input file
-        input_filename = "snap.input"
+        !input_filename = "snap.input"
         call get_command_argument(1, input_filename)
         call read_snap_input(trim(input_filename), inp)
 

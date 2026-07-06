@@ -540,8 +540,8 @@ integer(kind=4)                              :: t1,rate,t2
 if (.not.allocated (vec)) allocate(vec(this%object_lammps%nats*3))
 if (.not.allocated (vel)) allocate(vel(this%object_lammps%nats*3))
 
-iter=1
-this%counter=1
+iter=0
+this%counter=0
 
 do i=1,this%object_lammps%nats
  do j=1,3
@@ -558,8 +558,8 @@ do i=1, this%object_lammps%nats
  end if
 end do
 
-call this%get_prediction_err(vec,this%thresh_AL,iter,flag_new_struct,this%flag_energy,&
-        this%flag_forces)
+!call this%get_prediction_err(vec,this%thresh_AL,iter,flag_new_struct,this%flag_energy,&
+!        this%flag_forces)
 
 open(111, file="traj_MD_molforge.xyz", action="write",position='append')
 
@@ -843,29 +843,29 @@ end do
 
 if (dist_max < thresh) then
 
-open(111, file="new_geo_AL.xyz", action="write")
+!open(111, file="new_geo_AL.xyz", action="write")
 
-  write(111,*)this%object_lammps%nats
-  write(111,*)'XXX'
+!  write(111,*)this%object_lammps%nats
+!  write(111,*)'XXX'
 
- do j=1,this%object_lammps%nats
-  write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3))
- end do
+! do j=1,this%object_lammps%nats
+!  write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3))
+! end do
  
-close(111)
-   
-!open(111, file=trim(this%geometry_file), action="write",position='append')
-!     write(111,*)this%object_lammps%nats
-!  write(111,*)this%object_lammps%cell(1,:),this%object_lammps%cell(2,:),this%object_lammps%cell(3,:),&
-!                     this%object_lammps%nkinds
-
-!  do j=1,this%object_lammps%nats
-!   write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3)), &
-!           this%object_lammps%kind(j),this%object_lammps%mass(this%object_lammps%kind(j))
-!  end do
-
-
 !close(111)
+   
+open(111, file=trim(this%geometry_file), action="write",position='append')
+     write(111,*)this%object_lammps%nats
+  write(111,*)this%object_lammps%cell(1,:),this%object_lammps%cell(2,:),this%object_lammps%cell(3,:),&
+                     this%object_lammps%nkinds
+
+  do j=1,this%object_lammps%nats
+   write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3)), &
+           this%object_lammps%kind(j),this%object_lammps%mass(this%object_lammps%kind(j))
+  end do
+
+
+close(111)
 
 write(*,*) 'New structure found after',iter,'steps of MD'
 
@@ -1094,14 +1094,6 @@ test=matmul(D_t,D)
 call mat_inv(test,N)
 this%SNAP_prediction_matrix=test
 
-open(111, file="matrix_uncertainty", action="write")
-
-        do i=1,size(this%SNAP_prediction_matrix,1)
-         write(111,*) this%SNAP_prediction_matrix(i,:)
-        end do
-
-close(111)
-
 deallocate(test)
 
 if (.not.allocated(theta)) allocate(theta(N))
@@ -1138,9 +1130,6 @@ DENOMINATOR=dble(size_ref-N-1)
 
 this%s_z=dsqrt(NUMERATOR/DENOMINATOR)
 
-open(113,file='fattore_di_errore',action='write',position='append')
-write(113,*)this%s_z 
-close(113)
 end if
 
 
@@ -1224,12 +1213,6 @@ end do
 
 end if
 
-open(111,file="new_structure_vector",action="write")
-do i=1,size(x_new,1)
- write(111,*) x_new(i,:)
-end do
-close(111)
- 
 if ((this%flag_energy).and.(.not.this%flag_forces)) then
 
         if (.not.allocated(K_mat)) allocate(K_mat(N,1))
@@ -1309,10 +1292,6 @@ if (this%error>thresh) then
 
 flag_new_struct=.true.
 
- open(221,file="errors_predicted",action="write",position="append")
-  write(221,*) this%error
- close(221)
-
 open(111, file="new_geo_AL.xyz", action="write")
 
   write(111,*)this%object_lammps%nats
@@ -1324,18 +1303,18 @@ open(111, file="new_geo_AL.xyz", action="write")
 
 close(111)
 
-!open(111, file=trim(this%geometry_file), action="write",position='append')
-!     write(111,*)this%object_lammps%nats
-!  write(111,*)this%object_lammps%cell(1,:),this%object_lammps%cell(2,:),this%object_lammps%cell(3,:),&
-!                     this%object_lammps%nkinds
+open(111, file=trim(this%geometry_file), action="write",position='append')
+     write(111,*)this%object_lammps%nats
+  write(111,*)this%object_lammps%cell(1,:),this%object_lammps%cell(2,:),this%object_lammps%cell(3,:),&
+                     this%object_lammps%nkinds
 
-!  do j=1,this%object_lammps%nats
-!   write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3)), &
-!           this%object_lammps%kind(j),this%object_lammps%mass(this%object_lammps%kind(j))
-!  end do
+  do j=1,this%object_lammps%nats
+   write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3)), &
+           this%object_lammps%kind(j),this%object_lammps%mass(this%object_lammps%kind(j))
+  end do
 
 
-!close(111)
+close(111)
 
 
 end if
