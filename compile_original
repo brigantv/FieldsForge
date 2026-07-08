@@ -1,0 +1,11 @@
+#! /bin/bash
+
+export LAMMPS_DIR=/home/valerio/Desktop/lammps
+export MOL_FORGE=/home/valerio/Desktop/MolForge
+export DFTD3=/home/valerio/Downloads/dftd3-lib/dftd3-lib-0.9
+
+mpif90 -c -g  -I${DFTD3}/lib -I${MOL_FORGE}/Modules -I${LAMMPS_DIR}/examples/COUPLE/fortran2 parameters.f90 def_input.f90 def_lammps.f90 def_geom.f90 def_max.f90 def_SNAP.f90 def_force_field.f90 main.f90
+
+mpif90  *.o -g -L/usr/lib64/openmpi/lib -L${DFTD3}/lib -L${LAMMPS_DIR}/src -L${LAMMPS_DIR}/examples/COUPLE/fortran2 -L${MOL_FORGE}/libs -lblas -llammps_fortran -llammps_mpi -lMolForge -ldftd3 -llapack -lmpi_cxx -lstdc++ -lm -o snap_dev
+
+rm *.o

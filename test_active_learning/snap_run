@@ -1,0 +1,91 @@
+&SNAP
+
+  !--------------------------------------------------------------------
+  ! Workflow flags
+  !--------------------------------------------------------------------
+  train_ff      = .false.
+  periodic_flag = .false.
+  VdW_flag      = .false.
+  coul_flag     = .false.
+
+  !--------------------------------------------------------------------
+  ! Training data
+  !--------------------------------------------------------------------
+  nconfig       = 
+  geometry_file = ""
+  energy_file   = ""
+  forces_file   = ""
+  dipoles_file  = ""
+  record_file   = ""
+
+  !--------------------------------------------------------------------
+  ! What to fit  (set_type: "TRAIN" fits and writes coefficients,
+  !                          "VALID" reads existing coefficients and evaluates)
+  !--------------------------------------------------------------------
+  flag_energy  = .true.
+  flag_forces  = .true.
+  flag_stress  = .false.
+  set_type_en  = "VALID"
+  set_type_dip = "VALID"
+
+  !--------------------------------------------------------------------
+  ! SNAP energy descriptor
+  !   ezero_en(i) = .true.  -> constrain E0 of species i to zero
+  !   ezero_en(i) = .false. -> leave E0 of species i free
+  !--------------------------------------------------------------------
+  twojmax_en = 8
+  cutoff_en  = 4.0          ! Angstroms
+  lambda_en  = 0.1          ! L2 regularization
+  weight     = 6.0      ! relative weight of energies vs forces
+  ezero_en   = .false., .true.
+
+  !--------------------------------------------------------------------
+  ! SNAP dipole descriptor
+  !--------------------------------------------------------------------
+  twojmax_dip = 8
+  cutoff_dip  = 4.0         ! Angstroms
+  lambda_dip  = 0.0
+  ezero_dip   = .false., .true.
+
+  !--------------------------------------------------------------------
+  ! Coulomb screened electrostatics
+  !--------------------------------------------------------------------
+  R_screen = 4.0            ! Angstroms (converted to Bohr internally)
+
+  !--------------------------------------------------------------------
+  ! Molecular dynamics
+  !--------------------------------------------------------------------
+  md_flag           = .true.
+  nsteps            = 100000
+  timestep          = 1.0   ! femtoseconds (converted to atomic time units internally)
+  temperature_in    = 10.0  ! Kelvin (initial temperature)
+  temperature_final = 50.0  ! Kelvin (for thermostat ramp, if rampa_flag = .true.)
+  iseed             = 1216, 364, 1903, 4059
+
+  !--------------------------------------------------------------------
+  ! Geometry minimization (Adam optimizer)
+  !--------------------------------------------------------------------
+  minim_flag    = .false.
+  lr            = 0.001     ! Adam learning rate
+  max_iter_adam = 500000
+
+  !--------------------------------------------------------------------
+  ! Active learning
+  !   When active_learn = .true., the run stops and writes AL_stats.txt
+  !   when the uncertainty exceeds factor_thresh. Set nconfig_AL = nconfig
+  !   when not running active learning separately.
+  !--------------------------------------------------------------------
+  active_learn  =.true.
+  nconfig_AL    = 0        ! set to 0 to default to nconfig automatically
+  factor_thresh = 1.75
+
+  !--------------------------------------------------------------------
+  ! Molecule topology
+  !   topology(i)    = molecule index for atom i (1, 2, ...)
+  !   fixed_atoms(i) = 1 to fix atom i, 0 to leave it free
+  !   Only the first nats values are used; the rest are ignored.
+  !--------------------------------------------------------------------
+  n_mol      = 1
+  topology   = 18*1         ! all 18 atoms belong to molecule 1
+  fixed_atoms = 0, 10*0, 0  ! fix first and last atom
+/
