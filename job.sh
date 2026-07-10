@@ -29,6 +29,8 @@ ABINIT_EXE_DIR=/opt/orca/6.0.0					### directory containing the ab initio  execu
 from_scratch="yes"						### if set to "yes", deletes the common Record.txt file, restarting the AL session from scratch
 consecutive_runs=5					### number of consecutive successful runs that will lead to the conclusion of the AL session
 max_loop=500							### maximum number of MD runs to perform in the AL session
+procs=6							### number of processors to run the ab initio calculation
+
 nconfig=1							###initial configurations in the training set
 init_AL=1							### start numbering of AL directories on compute node (important if you already have AL running on nodes)
 tot_AL=0							### how many parallel AL sessions to run

@@ -1,37 +1,35 @@
 #! /bin/bash
 
-natoms=256
+compound="Dy_b"
+WORK_DIR="/home/postdoc3/new/ML_proj/SNAP_PBC"
 
-WORK_DIR=/home/users/brigantv/active_learning 		
-ABINIT_EXE_DIR=/home/users/brigantv/cp2k-2024.3/exe/local
+natoms=115
 
-compound=Mol9_ICMM
-project_name_cp2k=mol_9 ### flag specific to CP2K
+ABINIT_EXE_DIR=/opt/orca/6.0.0/
+compound=Dy_b
 
-from_scratch="yes"      ### if set to "yes", it will delete the common record_file where the story of the already finish MD runs is store, "no" if otherwise
-consecutive_runs=10	### #number of consecutive runs finished that will lead to the conclusion of this AL session
 
-number_AL=1		### a tracker for parallel sessions of AL
-nconfig_in=1		### starting number of configurations in the training set
-
-max_loop=500		### maximum number of MD runs to perform in the AL session
-procs=14		### number of processors to run the ab initio calculation
-
+from_scratch="yes"
+#number of consecutive runs finished that will lead to the conclusion of the job
+consecutive_runs=5
+number_AL=1
+nconfig_in=1
+max_loop=100
+procs=2
 
 #common directory where you have your common files, be careful to check whether you want to destroy or not the "Record.txt." file
 common_dir="${WORK_DIR}/${compound}"
 
-# file_record is the file where you store the last run results (yes/no structure found)
 file_record="${common_dir}/Record.txt"
 
-##############################################################################################################################################################
+############################################################################
 
 #delete files in common directory according to whether you're restarting everything from scratch or not
 if [ ${from_scratch} == "yes" ]
 then
 
-rm ${file_record}
-rm ${common_dir}/*check
+yes | rm ${file_record}
+yes | rm ${common_dir}/*check
 
 fi
 
@@ -44,6 +42,7 @@ FILE_DIP=${common_dir}/dipoles_tr_AL_++
 FILE_GEO=${common_dir}/geo_tr_AL_++
 FILE_FORCE=${common_dir}/forces_tr_AL_++
 ###################
+
 
 for loop_1 in $(seq 1 ${max_loop} )
 do
@@ -62,8 +61,9 @@ fi
 fi
 
 echo " Training the force field ${loop_1} "
-
-mpiexec -n 1 -quiet ./snap snap_tr
+module load mpi/openmpi-4.1.1
+mpiexec -q -n 1 ./snap snap_tr
+#./exe
 
 var1=$(( $RANDOM % 4095 ))
 var2=$(( $RANDOM % 4095 ))
@@ -80,13 +80,12 @@ var4=$(( ${var4}+1 ))
 echo ${var4}
 fi
 
-sed -i '/iseed/c\iseed=['${var1}','${var2}','${var3}','${var4}']' snap_run
+sed -i '/iseed/c\iseed='${var1}','${var2}','${var3}','${var4}'' snap_run
 
 
 echo "Running MD..."
 
-mpiexec -n 1 -quiet ./snap snap_run
-
+mpiexec -q -n 1 ./snap snap_run
 echo "Finished MD"
 
 #if the Record file exists,check whether the last consecutive runs have achieved success. If so, end AL and cancel the job tout court.
@@ -104,7 +103,6 @@ cp AL_stats.txt ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp traj* ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp etotal* ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp forces_rms* ${WORK_DIR}/${compound}_out/AL_${number_AL}
-cp ${common_dir}/*++ ${WORK_DIR}/${compound}_out
 cp snapcoeff* ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp cumulative_geo_AL.xyz ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp energy_rms* ${WORK_DIR}/${compound}_out/AL_${number_AL}
@@ -127,10 +125,12 @@ if [ $last_line == "GO" ]
 then
 echo "Launching DFT..."
 
-mpirun -n $procs ${EXE_DIR}/cp2k.popt -i inp -o out_AL_${loop_1}
+module load orca/6.0.0
+
+${ABINIT_EXE_DIR}/orca inp >  out_AL_${loop_1}
 
 echo "DFT terminated"
-
+module unload mpi/openmpi-4.1.1
 # adding new structure to cumulative geo AL
 
 cat new_geo_AL.xyz >> cumulative_geo_AL.xyz
@@ -156,44 +156,34 @@ flock 15 || { echo "Failed to acquire lock."; exit 1; }
 flock 16 || { echo "Failed to acquire lock."; exit 1; }
 
 
-# cp2k parsing
+# orca parsing
 
 
-force_file="${project_name_cp2k}-force-1_0.xyz"
 
 # write energy 
-grep 'ENERGY| Total FORCE_E' out_AL_${loop_1} | tail -n 1 | awk '{printf "%1.12f \n",627.503*$9 }' >> ${FILE_ENE}  #a.u. -> kcal/mol
-grep 'ENERGY| Total FORCE_E' out_AL_${loop_1} | tail -n 1 | awk '{printf "%1.12f \n",627.503*$9 }' >> new_ener.txt
+grep 'FINAL SINGLE*' out_AL_${loop_1} | awk '{print $5}' | awk '{$1=sprintf("%5f",$1*627.509474063)}1'  >> ${FILE_ENE}
+grep 'FINAL SINGLE*' out_AL_${loop_1} | awk '{print $5}' | awk '{$1=sprintf("%5f",$1*627.509474063)}1'  >> new_ener.txt
 
-# write forces
-s=$(( natoms + 5 ))
-x=$(awk 'NR>4&&NR<='${s}'{printf "%.17f\n", -$4}' ${force_file} | head -n -1)   # this file needs to be deleted or the next dft calc will add data
-y=$(awk 'NR>4&&NR<='${s}'{printf "%.17f\n", -$5}' ${force_file} | head -n -1)
-z=$(awk 'NR>4&&NR<='${s}'{printf "%.17f\n", -$6}' ${force_file} | head -n -1)
-
-x=($x)
-y=($y)
-z=($z)
-
-length_x=${#x[@]}
-
-for (( i=0; i<$length_x; i++ )); do
-	echo "${x[i]}" >> new_gradients.txt 
-	echo "${x[i]}" >> ${FILE_FORCE}
-	echo "${y[i]}" >> new_gradients.txt 
-	echo "${y[i]}" >> ${FILE_FORCE}
-	echo "${z[i]}" >> new_gradients.txt 
-	echo "${z[i]}" >> ${FILE_FORCE}
-done
-mv ${force_file} ${force_file}_${loop_1}
 
 # write dipoles, to change at a later stage
+grep 'Total Dipole*' out_AL_${loop_1} | awk '{print $5}' >> ${FILE_DIP}
+grep 'Total Dipole*' out_AL_${loop_1} | awk '{print $6}' >> ${FILE_DIP}
+grep 'Total Dipole*' out_AL_${loop_1} | awk '{print $7}' >> ${FILE_DIP}
 
-echo 0.0 >> ${FILE_DIP}
-echo 0.0 >> ${FILE_DIP}
-echo 0.0 >> ${FILE_DIP}
+grep 'Total Dipole*' out_AL_${loop_1} | awk '{print $5}' >> new_dipoles.txt
+grep 'Total Dipole*' out_AL_${loop_1} | awk '{print $6}' >> new_dipoles.txt
+grep 'Total Dipole*' out_AL_${loop_1} | awk '{print $7}' >> new_dipoles.txt
 
-## end cp2k parsing
+linea=$( grep -n 'gradient' inp.engrad | awk -F : '{print $1}' )
+
+(( q=${linea} + ${natoms}*3 +1 ))
+(( k=${natoms}*3 ))
+head -n ${q} inp.engrad | tail -n ${k} >> new_gradients.txt
+head -n ${q} inp.engrad | tail -n ${k} >> ${FILE_FORCE}
+
+grep 'CENTER*' out_AL_${loop_1} | awk '{print $12,$13,$14,$15}'|sed 's/,//g'|sed 's/[)(]//g' >> ${FILE_SHIFT}
+
+## end orca parsing
 
 echo ${number_AL} >> ${common_dir}/geo_check
 echo ${number_AL} >> ${common_dir}/force_check
@@ -221,15 +211,16 @@ fi
 new_structures=$( grep '0' ${file_record} | wc -l )
 (( nconfig=${nconfig_in}+${new_structures} ))
 
-sed -i 's/nconfig=.*/nconfig='${nconfig}'/g' snap_tr
-sed -i 's/nconfig_AL=.*/nconfig_AL=0/g' snap_tr
+sed -i 's/nconfig.*/nconfig='${nconfig}'/g' snap_tr
+sed -i 's/nconfig_AL.*/nconfig_AL='${nconfig}'/g' snap_tr
+sed -i 's/nconfig.*/nconfig='${nconfig}'/g' snap_run
+sed -i 's/nconfig_AL.*/nconfig_AL='${nconfig}'/g' snap_run
 
 cp Execution_times ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp AL_stats.txt ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp traj* ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp etotal* ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp forces_rms* ${WORK_DIR}/${compound}_out/AL_${number_AL}
-cp ${common_dir}/*++ ${WORK_DIR}/${compound}_out
 cp snapcoeff* ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp cumulative_geo_AL.xyz ${WORK_DIR}/${compound}_out/AL_${number_AL}
 cp energy_rms* ${WORK_DIR}/${compound}_out/AL_${number_AL}

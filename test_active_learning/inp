@@ -1,0 +1,16 @@
+!def2-SVP DEFGRID3
+!BP86 SloppySCF
+!EnGrad
+
+%maxcore 4000
+
+%pal
+nprocs 6
+end
+
+%scf
+maxiter 1000
+end
+
+# Molecule specification
+* xyzfile 0 1 new_geo_AL.xyz

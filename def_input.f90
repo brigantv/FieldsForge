@@ -135,11 +135,11 @@ contains
     cutoff_en         = 4.0d0
     lambda_en         = 0.0d0
     weight            = 1.0d0
-    ezero_en          = .false.
+    ezero_en          = .true.
     twojmax_dip       = 8
     cutoff_dip        = 4.0d0
     lambda_dip        = 0.0d0
-    ezero_dip         = .false.
+    ezero_dip         = .true.
     R_screen          = 4.0d0          ! Angstroms
     md_flag           = .false.
     nsteps            = 1000

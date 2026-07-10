@@ -18,19 +18,17 @@ In the folder "test_benzene", the data for a dataset of 79 molecules of benzene 
 
 INSTRUCTIONS FOR ACTIVE LEARNING
 
-Here the instructions to perform active learning on HPC facilities is given calling the quantum chemistry code CP2K. The scripts can be easily adapted to perform also in local and with any
+Here the instructions to perform active learning on HPC facilities is given calling the quantum chemistry code Orca. The scripts can be easily adapted to perform also in local and with any
 other quantum chemistry software. 
 
 1.  Change the lines in job.sh according to your needs (frames in your initial training set, path of training directories,...). Further explanations are given in the file job.sh.
 
-2. Prepare a folder with the same name specified in the job.sh file. In this folder, put the training data strictly named with the following format: ener_tr_${nconfig}, forces_tr_${nconfig}, dipoles_tr_${nconfig} (if needed) and geo_tr_${nconfig}.
+2. Prepare a folder with the same name specified in the job.sh file. In this folder, put the training data you will put the training data (energies, forces, dipoles and geometries).
 
-3. In the same folder at point 2, provide the following files: input, active_learning.sh, snap.train and snap.md.
-"input" is the input file for the quantum chemistry softwaree program that has to be used to perform ab initio calculations. Finally, active_learning.sh is the core driver of the active learning process. It calls SNAP_PBC for the fit, molecular dynamics and  
-and calls the external quantum chemistry software for ab initio calculations. This file has to be modified according to your specific calculation. The files snap.train and snap.md are needed to perform the training and MD during the active learning.
-Necessary instructions on how to prepare the files are given in "test_active_learning_gold/snap.md" and "test_active_learning_gold/snap.train".
+3. In the same folder at point 2, provide the following files: input, active_learning.sh, snap_tr and snap_run.
+"inp" is the input file for the quantum chemistry softwaree program that has to be used to perform ab initio calculations. Finally, active_learning.sh is the core driver of the active learning process. It calls "snap" for the fit, molecular dynamics and calls the external quantum chemistry software for ab initio calculations. This file has to be modified according to your specific calculation. The files snap_tr and snap_run are needed to perform the training and MD during the active learning. Necessary instructions on how to prepare the files are given in "test_active_learning/snap_run" and "test_active_learning_gold/snap_tr".
 
-An example on how to prepare a folder for active learning is given in "test_active_learning_gold".
+An example on how to prepare a folder for active learning is given in "test_active_learning".
 
 If you use this program, please cite:
 Valerio Briganti and Alessandro Lunghi 2023 Mach. Learn.: Sci. Technol. 4 035005

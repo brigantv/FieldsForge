@@ -36,7 +36,7 @@
   twojmax_en = 8
   cutoff_en  = 4.0          ! Angstroms
   lambda_en  = 0.1          ! L2 regularization
-  weight     = 6.0      ! relative weight of energies vs forces
+  weight     = 18.574175621      ! relative weight of energies vs forces
   ezero_en   = .false., .true.
 
   !--------------------------------------------------------------------
@@ -56,7 +56,7 @@
   ! Molecular dynamics
   !--------------------------------------------------------------------
   md_flag           = .true.
-  nsteps            = 100000
+  nsteps            = 1000
   timestep          = 1.0   ! femtoseconds (converted to atomic time units internally)
   temperature_in    = 10.0  ! Kelvin (initial temperature)
   temperature_final = 50.0  ! Kelvin (for thermostat ramp, if rampa_flag = .true.)
@@ -77,7 +77,7 @@
   !--------------------------------------------------------------------
   active_learn  =.true.
   nconfig_AL    = 0        ! set to 0 to default to nconfig automatically
-  factor_thresh = 1.75
+  factor_thresh = 1.5
 
   !--------------------------------------------------------------------
   ! Molecule topology

@@ -193,25 +193,25 @@ allocate(DFT_stress(3*nconfig,3))
 !close(100)
 end if
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        !do i=1,nconfig
+        do i=1,nconfig
 
-        ! call lammps_open_no_mpi("lmp -screen none -log log.simple",set(i)%lmp)
-        ! call set(i)%setup_lammps_lattice(set(i)%nkinds)
+         call lammps_open_no_mpi("lmp -screen none -log log.simple",set(i)%lmp)
+         call set(i)%setup_lammps_lattice(set(i)%nkinds)
         ! call set(i)%calc_vol                   !calculate the volume of the cell for every structure in the set
         ! call set(i)%calc_Js                    !calculate the jacobians
         ! call set(i)%calc_Gs                    !calculate the metric tensors for the direct and reciprocal lattice
         ! set(i)%Gcon=(4.0*PI)**2*set(i)%Gcon    !rescaling the metric tensor of the reciprocal lattice to
-        ! call set(i)%get_bis(cutoff_dip,twojmax_dip)
+         call set(i)%get_bis(cutoff_dip,twojmax_dip)
 
         ! if (.not.allocated(set(i)%grads)) allocate(set(i)%grads(3,set(i)%nats))
         ! call set(i)%grimme_d3(periodic_flag)
         ! VdW_en(i)=set(i)%edisp*Har_to_kc
         ! deallocate(set(i)%grads)
-        ! call lammps_close(set(i)%lmp)
-       !end do
-       ! call fit_dipoles(set,num_bisp_dip,trim(dipoles_file),lambda_dip,coeff_mask_dip,set_type_dip,tot_charge,&
-       !          len_trim(dipoles_file))
-       ! call SNAP_coulomb_energy(set,R_screen,coul_energy)
+         call lammps_close(set(i)%lmp)
+       end do
+        call fit_dipoles(set,num_bisp_dip,trim(dipoles_file),lambda_dip,coeff_mask_dip,set_type_dip,tot_charge,&
+                 len_trim(dipoles_file))
+        call SNAP_coulomb_energy(set,R_screen,coul_energy)
 
         ! testing the routine for the Ewald summation
         ! insert here the call to the subroutine to test
@@ -219,7 +219,7 @@ end if
         !set(1)%ew_alpha=2.0
         !call set(1)%get_ewald
 
-        !
+        
 
           if ((coul_flag).and.(VdW_flag)) then
 
