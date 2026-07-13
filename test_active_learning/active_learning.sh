@@ -62,7 +62,7 @@ fi
 
 echo " Training the force field ${loop_1} "
 module load mpi/openmpi-4.1.1
-mpiexec -q -n 1 ./snap snap_tr
+mpiexec -q -n 1 ./fforge snap_tr
 #./exe
 
 var1=$(( $RANDOM % 4095 ))
@@ -85,7 +85,7 @@ sed -i '/iseed/c\iseed='${var1}','${var2}','${var3}','${var4}'' snap_run
 
 echo "Running MD..."
 
-mpiexec -q -n 1 ./snap snap_run
+mpiexec -q -n 1 ./fforge snap_run
 echo "Finished MD"
 
 #if the Record file exists,check whether the last consecutive runs have achieved success. If so, end AL and cancel the job tout court.
