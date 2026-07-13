@@ -1,0 +1,91 @@
+&SNAP
+
+  !--------------------------------------------------------------------
+  ! Workflow flags
+  !--------------------------------------------------------------------
+  train_ff      = .true.		! fit of energy/forces/stress
+  periodic_flag = .true.		! enables PBC
+  VdW_flag      = .false.		! enables VdW corrections (D3 scheme)
+  coul_flag     = .false.		! fit of dipoles
+
+  !--------------------------------------------------------------------
+  ! Training data
+  !--------------------------------------------------------------------
+  nconfig       = 79
+  geometry_file = "test_asmita/geo_tr_AL_++"
+  energy_file   = "test_asmita/ener_tr_AL_++"
+  forces_file   = "test_asmita/forces_tr_AL_++"
+  dipoles_file  = "test_asmita/dipoles_tr_AL_++"
+  record_file   = "test_asmita/Record.txt"
+
+  !--------------------------------------------------------------------
+  ! What to fit  (set_type: "TRAIN" fits and writes coefficients,
+  !                          "VALID" reads existing coefficients and evaluates)
+  !--------------------------------------------------------------------
+  flag_energy  = .true.
+  flag_forces  = .true.
+  flag_stress  = .false.
+  set_type_en  = "TRAIN"
+  set_type_dip = "TRAIN"
+
+  !--------------------------------------------------------------------
+  ! SNAP energy descriptor 
+  !   ezero_en(i) = .true.  -> constrain E0 of species i to zero
+  !   ezero_en(i) = .false. -> leave E0 of species i free
+  !--------------------------------------------------------------------
+  twojmax_en = 8		
+  cutoff_en  = 4.0          ! Angstroms
+  lambda_en  = 0.1          ! L2 regularization
+  !weight     = 3.464101615137754      ! relative weight of energies vs forces, when set to sqrt(3*N_ats), energies and forces are treated equally
+  ezero_en   = .false., .true.	       ! (quite a technical feature, leave it as it is)
+
+  !--------------------------------------------------------------------
+  ! SNAP dipole descriptor (this section is reserved for the fit of dipole)
+  !--------------------------------------------------------------------
+  twojmax_dip = 8
+  cutoff_dip  = 4.0         ! Angstroms
+  lambda_dip  = 0.0
+  ezero_dip   = .false., .true.
+
+  !--------------------------------------------------------------------
+  ! Coulomb screened electrostatics
+  !--------------------------------------------------------------------
+  R_screen = 4.0            ! Angstroms (converted to Bohr internally)
+
+  !--------------------------------------------------------------------
+  ! Molecular dynamics
+  !--------------------------------------------------------------------
+  md_flag           = .true.
+  nsteps            = 1000
+  timestep          = 1.0   ! femtoseconds
+  temperature_in    = 10.0  ! Kelvin (initial temperature)
+  temperature_final = 50.0  ! Kelvin (final temperature, it will be reached as soon as possible)
+  iseed             = 1216, 364, 1903, 4059 ! these 4 numbers determine the initial velocities of atoms
+
+  !--------------------------------------------------------------------
+  ! Geometry minimization (Adam optimizer)
+  !--------------------------------------------------------------------
+  minim_flag    = .false.
+  lr            = 0.001     ! Adam learning rate
+  max_iter_adam = 50000	    ! number of geometry steps
+
+  !--------------------------------------------------------------------
+  ! Active learning
+  !   When active_learn = .true., the run stops and writes AL_stats.txt
+  !   when the uncertainty exceeds thresh_AL. Set nconfig_AL = nconfig
+  !   when not running active learning separately.
+  !--------------------------------------------------------------------
+  active_learn  =.true.
+  nconfig_AL    = 79        ! set to 0 to default to nconfig automatically
+  factor_thresh = 1.0001     ! delta value for active learning
+
+  !--------------------------------------------------------------------
+  ! Molecule topology
+  !   topology(i)    = molecule index for atom i (1, 2, ...)
+  !   fixed_atoms(i) = 1 to fix atom i, 0 to leave it free
+  !   Only the first nats values are used; the rest are ignored.
+  !--------------------------------------------------------------------
+  n_mol      = 1
+  topology   = 18*1         ! ignore it if it is not important to specify atoms belonging to a molecule
+  fixed_atoms = 0, 10*0, 0  ! a list of 0 (atom ree to move) and 1 (atom fixed)
+/

@@ -27,6 +27,7 @@
    procedure     :: setup_lammps_lattice
    procedure     :: get_bis
    procedure     :: get_der_bis
+   procedure     :: get_stress
    procedure     :: get_forces
    procedure     :: grimme_d3
    procedure     :: shift_mol
@@ -118,7 +119,6 @@
   class(lammps_obj),intent(inout)                       :: this
   integer                                               :: i,j,k,pos,m
   integer (C_int), dimension(:),pointer                 :: id
-  integer                                               :: nlocal
   integer,intent(in)                                    :: types
   integer,intent(out)                                   :: twojmax
   integer                                               :: components
@@ -137,7 +137,13 @@
   end do
 
   do i=1,types
-   der_bis_string=trim(der_bis_string)//' 1'
+     
+  !if (this%label(i)=="H") then
+  !         der_bis_string=trim(der_bis_string)//' 0.1'
+  ! else
+           der_bis_string=trim(der_bis_string)//' 1'
+  !end if
+
   end do
 
   call lammps_command(this%lmp,trim(der_bis_string))
@@ -172,7 +178,6 @@
     !     end do
 
   !close(11)
-
   end subroutine get_der_bis
 
   subroutine get_bis(this,cutoff,twojmax)
@@ -181,7 +186,6 @@
   class(lammps_obj),intent(inout)                       :: this
   integer                                               :: i,j,k,pos,m
   integer (C_int), dimension(:),pointer                 :: id
-  integer                                               :: nlocal
   integer,intent(out)                                   :: twojmax
   integer                                               :: components
   integer,allocatable                                   :: store_kind(:)
@@ -203,6 +207,13 @@
   
   end do
 
+  !do i=1,this%nkinds
+  ! if (this%label(i)=="H") then
+  !         cutoff_string=trim(cutoff_string)//' 0.1'
+  ! else
+  !         cutoff_string=trim(cutoff_string)//' 1'
+  ! end if
+  !end do
   do i=1,this%nkinds
 
    cutoff_string=trim(cutoff_string)//' 1'
@@ -234,15 +245,62 @@
     do m=1,components-1
      
      this%at_desc(k)%desc(m+1)=bispec(m,i)
-
+     
     end do
+
+
    end if
   end do
    end do  
 
   call lammps_command(this%lmp,"uncompute bispec")
-
   end subroutine get_bis
+
+  subroutine get_stress(this,cutoff,twojmax)
+  implicit none
+  class(lammps_obj), intent(inout)                      :: this
+  integer                                               :: i,j,k,pos,m
+  integer (C_int), dimension(:),pointer                 :: id
+  integer,intent(out)                                   :: twojmax
+  integer                                               :: components
+  integer,allocatable                                   :: store_kind(:)
+  real (C_double), dimension(:,:), pointer              :: x,stress_tens
+  double precision,intent(in)                           :: cutoff
+  character(len=12000)                                  :: stress_string
+
+  call lammps_command(this%lmp,"pair_style zero 30")
+  call lammps_command(this%lmp,"pair_coeff * *")
+  write(stress_string,*)'compute stress all snav/atom',cutoff,'1',twojmax
+  
+  do i=1,this%nkinds
+   stress_string=trim(stress_string)//' 0.5'
+  end do
+
+  do i=1,this%nkinds
+   stress_string=trim(stress_string)//' 1'
+  end do
+
+  call lammps_command(this%lmp,trim(stress_string))
+  call lammps_command(this%lmp,"run 0")
+  call lammps_extract_compute(stress_tens,this%lmp,'stress',LMP_STYLE_ATOM,LMP_TYPE_ARRAY)
+  call lammps_extract_atom(id,this%lmp,"id")
+  
+  if (allocated(this%stress)) deallocate(this%stress)
+  if (.not.allocated(this%stress)) allocate(this%stress(size(stress_tens,1),size(stress_tens,2)))
+  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!columns refer to atoms, rows to order and component  
+
+  do k=1,this%nats
+   do i=1,this%nats
+    if (id(i)==k) then
+     this%stress(:,k)=stress_tens(:,i)
+    end if
+   end do
+  end do
+
+  call lammps_command(this%lmp,"uncompute stress")
+  
+  end subroutine get_stress
 
   subroutine get_forces(this,screen_rad,F,bispec_flag,num_bisp_en,num_bisp_dip)
   implicit none
@@ -479,7 +537,8 @@ end subroutine get_forces
   latVecs(2,:)=this%cell(:,2)*A_to_B
   latVecs(3,:)=this%cell(:,3)*A_to_B
   ! Calculate dispersion and gradients for periodic case
-  if (.not.allocated(this%stress)) allocate(this%stress(3,3))
+  if (allocated(this%stress)) deallocate(this%stress)
+  allocate(this%stress(3,3))
   call dftd3_pbc_dispersion(dftd3, coords, atnum, latVecs, this%edisp, this%grads, this%stress)
   !write(*, "(A)") "*** Dispersion for periodic case"
   !write(*, "(A,ES20.12)") "Energy [au]:", edisp

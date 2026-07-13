@@ -29,7 +29,6 @@ type(lammps_obj),dimension(:),allocatable,intent(in)                    :: set
 logical,dimension(:),allocatable,intent(in)                             :: ezero_constr
 integer                                                                 :: start_cycle,end_cycle,help_counter
 integer                                                                 :: start_snap_force
-!variables to call function dgels
 character(len=1)                                                        :: TRANS
 integer                                                                 :: MF,N,NRHS,LDA,LDB,LWORK,INFO
 double precision,dimension(:),allocatable                               :: WORK
@@ -116,13 +115,6 @@ if ((flag_forces).and.(flag_energy)) then
  help_counter=size(set)+3*tot_atom
 
 end if
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-open(112,file="vettore_target")
-do i=1,size_ref
-write(112,*) b(i)
-end do
-close(112)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!REGULARIZATION
 
@@ -227,6 +219,22 @@ if (flag_forces) then
         F=A(start_snap_force+1:start_snap_force+3*tot_atom,:)
 
 end if
+
+!!!!DEBUG
+!open(11,file='SNAP_matrix',action='write')
+! do i=1,size(A,1)
+!  write(11,*) A(i,:)
+! end do
+!close(11)
+
+!open(11,file='target_values',action='write')
+! do i=1,size(b,1)
+!  write(11,*) b(i)
+! end do
+!close(11)
+
+!!!!
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!SOLVING THE LINEAR LEAST SQUARES PROBLEM
 if (set_type=='TRAIN') then
         
