@@ -23,6 +23,7 @@ module force_field_min_class
   integer                          :: num_bisp_en,num_bisp_dip
   integer                          :: nconfig_AL
   integer,dimension(4)             :: iseed
+  integer,allocatable              :: fixed_atoms(:)
   double precision                 :: timestep
   double precision                 :: temperature,temperature_in,temperature_final
   double precision                 :: lambda_dip    
@@ -45,10 +46,10 @@ module force_field_min_class
   logical                          :: flag_energy,flag_forces
   logical                          :: periodic_flag
   integer                          :: counter,nsteps
-   double precision               :: eps=1.0e-7
+  double precision               :: eps=1.0e-7
   double precision               :: beta1=0.9d0
   double precision               :: beta2=0.999d0
-   integer                        :: nval
+  integer                        :: nval
   double precision               :: ener
   double precision, allocatable  :: val(:)
   double precision, allocatable  :: grad(:)
@@ -69,6 +70,7 @@ module force_field_min_class
   procedure                        :: propagate_md
   procedure                        :: control_structure
   procedure                        :: minimize_adam
+  procedure                        :: minimize_gd
   procedure                        :: get_prediction_err
   procedure                        :: shift_CM
   procedure                        :: update_temperature
@@ -449,6 +451,68 @@ end subroutine init_vel
          return
          end subroutine minimize_adam
 
+         subroutine minimize_gd(this,max_iter,start_iter)
+         implicit none
+         class(force_field_min)       :: this
+         integer                       :: iter,i,iter0,j
+         integer, optional             :: max_iter,start_iter
+         double precision              :: gradnorm
+         double precision              :: E1,E2
+         double precision,allocatable  :: vec(:)
+         double precision              :: val
+
+         if (.not.allocated (vec)) allocate(vec(this%object_lammps%nats*3))
+          do i=1,this%object_lammps%nats
+          do j=1,3
+                vec((i-1)*3+j)=this%object_lammps%x(i,j)
+          end do
+          end do
+
+          iter0=0
+          if(present(start_iter)) iter0=start_iter
+          if(present(max_iter)) this%max_iter=max_iter
+          if(this%print_grad) open(this%print_grad_io,file='grad.dat')
+          if(this%print_val) open(this%print_val_io,file='param.dat')
+
+          iter=1
+          E2=0.0
+          do while (iter.le.this%max_iter)
+
+           E1=E2
+           call this%get_fgrad(vec,val,this%grad)
+           E2=val
+
+           gradnorm=0.0d0
+           do i=1,size(this%grad)
+!            if(this%grad(i).gt.this%max_grad) this%grad(i)=this%max_grad
+!            if(this%grad(i).lt.this%max_grad) this%grad(i)=-this%max_grad
+            gradnorm=gradnorm+this%grad(i)**2
+           enddo
+
+           if(this%print_grad) write(this%print_grad_io,*) this%grad
+           if(this%print_val) write(this%print_val_io,*) this%val
+
+           write(*,*) 'Grad Iter: ',iter+iter0,sqrt(gradnorm/size(this%grad)),val
+
+           if(allocated(this%loc_lr))then
+            this%val=this%val-this%lr*this%grad*this%loc_lr
+           else
+            this%val=this%val-this%lr*this%grad
+           endif
+          !!!!!!!!!!!!!!!!CHECK CONVERGENCE CRITERIA
+          if ((sqrt(gradnorm/size(this%grad))<0.01).and.(maxval(this%grad)<0.1)&
+           .and.(abs(E2-E1)<0.0001)) then
+          stop
+          end if
+
+           iter=iter+1
+          enddo
+
+          if(this%print_grad) close(this%print_grad_io)
+          if(this%print_val) close(this%print_val_io)
+
+         return
+         end subroutine minimize_gd
 
 
 subroutine propagate_md(this,nsteps,dt)
@@ -488,6 +552,14 @@ do i=1,this%object_lammps%nats
  end do
 end do
 
+do i=1, this%object_lammps%nats
+ if (this%fixed_atoms(i)==1) then
+  vel((i-1)*3+1: (i-1)*3+3)=0
+ end if
+end do
+
+!call this%get_prediction_err(vec,this%thresh_AL,iter,flag_new_struct,this%flag_energy,&
+!        this%flag_forces)
 
 open(111, file="traj_MD_molforge.xyz", action="write",position='append')
 
@@ -497,7 +569,7 @@ open(111, file="traj_MD_molforge.xyz", action="write",position='append')
  do i=1,this%object_lammps%nats
  write(111,*) this%object_lammps%label(this%object_lammps%kind(i)),vec(((i-1)*3)+1:(i*3)) 
  end do
-  close(111)
+close(111)
 
 if (.not.allocated(force)) allocate(force(this%object_lammps%nats*3))
 
@@ -519,7 +591,7 @@ do i=1,this%object_lammps%nats
  end do
 end do
 
-temp=(2.0d0*E_kin)/((3.0d0*this%object_lammps%nats-3.0d0)*boltz)
+temp=(2.0d0*E_kin)/((3.0d0*(this%object_lammps%nats-sum(this%fixed_atoms))-3.0d0)*boltz)
 
 open(111, file="etotal_kin_pot_temp_molforge.txt", action="write",position='append')
 
@@ -568,7 +640,11 @@ this%counter=this%counter+1
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!calculate half-step velocities
 
 vel=vel+0.5d0*acc*dt
-
+do i=1, this%object_lammps%nats
+ if (this%fixed_atoms(i)==1) then
+  vel((i-1)*3+1: (i-1)*3+3)=0 
+ end if
+end do
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!calculate full step positions
 
 vec=(vec*A_to_B)+vel*dt
@@ -631,6 +707,11 @@ end do
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!calculate full step velocities
 
 vel=vel+0.5d0*acc*dt
+do i=1, this%object_lammps%nats
+ if (this%fixed_atoms(i)==1) then
+  vel((i-1)*3+1: (i-1)*3+3)=0
+ end if
+end do
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 E_kin=0.0
@@ -643,14 +724,14 @@ do i=1,this%object_lammps%nats
  end do
 end do
 
-temp=(2.0d0*E_kin)/(3.0d0*this%object_lammps%nats*boltz)
+temp=(2.0d0*E_kin)/(3.0d0*(this%object_lammps%nats-sum(this%fixed_atoms))*boltz)
 
 if (this%rampa_flag) then
 call this%update_temperature(iter)
 end if
 
-E_kin_new= resamplekin(E_kin,((3.0d0*this%object_lammps%nats-3.d0)/2.0d0)*this%temperature_final &
-        *boltz,(3*this%object_lammps%nats)-3,100.0d0)
+E_kin_new= resamplekin(E_kin,((3.0d0*(this%object_lammps%nats-sum(this%fixed_atoms))-3.d0)/2.0d0)*this%temperature_final &
+        *boltz,(3*(this%object_lammps%nats-sum(this%fixed_atoms)))-3,100.0d0)
 
 
 vel=dsqrt(E_kin_new/E_kin)*vel
@@ -665,7 +746,7 @@ do i=1,this%object_lammps%nats
  end do
 end do
 
-temp=(2.0d0*E_kin)/((3.0d0*this%object_lammps%nats-3.0d0)*boltz)
+temp=(2.0d0*E_kin)/((3.0d0*(this%object_lammps%nats-sum(this%fixed_atoms))-3.0d0)*boltz)
 
 
 if (mod(iter,5)==0) then
@@ -735,7 +816,6 @@ do i=1,size(this%set_AL)
 end do
 
 end if
-
 this%object_lammps%x=transpose(reshape(vec,(/3,this%object_lammps%nats/)))
 
 call lammps_open_no_mpi("lmp -screen none -log log.simple",this%object_lammps%lmp)
@@ -771,29 +851,29 @@ end do
 
 if (dist_max < thresh) then
 
-open(111, file="new_geo_AL.xyz", action="write")
+!open(111, file="new_geo_AL.xyz", action="write")
 
-  write(111,*)this%object_lammps%nats
-  write(111,*)'XXX'
+!  write(111,*)this%object_lammps%nats
+!  write(111,*)'XXX'
+
+! do j=1,this%object_lammps%nats
+!  write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3))
+! end do
+ 
+!close(111)
+   
+open(111, file=trim(this%geometry_file), action="write",position='append')
+     write(111,*)this%object_lammps%nats
+  write(111,*)this%object_lammps%cell(1,:),this%object_lammps%cell(2,:),this%object_lammps%cell(3,:),&
+                     this%object_lammps%nkinds
 
   do j=1,this%object_lammps%nats
-   write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3))
+   write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3)), &
+           this%object_lammps%kind(j),this%object_lammps%mass(this%object_lammps%kind(j))
   end do
- 
+
+
 close(111)
-   
-!open(111, file=trim(this%geometry_file), action="write",position='append')
-!     write(111,*)this%object_lammps%nats
-!  write(111,*)this%object_lammps%cell(1,:),this%object_lammps%cell(2,:),this%object_lammps%cell(3,:),&
-!                     this%object_lammps%nkinds
-
-!  do j=1,this%object_lammps%nats
-!   write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3)), &
-!           this%object_lammps%kind(j),this%object_lammps%mass(this%object_lammps%kind(j))
-!  end do
-
-
-!close(111)
 
 write(*,*) 'New structure found after',iter,'steps of MD'
 
@@ -1058,9 +1138,6 @@ DENOMINATOR=dble(size_ref-N-1)
 
 this%s_z=dsqrt(NUMERATOR/DENOMINATOR)
 
-open(113,file='fattore_di_errore',action='write',position='append')
-write(113,*)this%s_z 
-close(113)
 end if
 
 
@@ -1143,7 +1220,7 @@ do i=1,this%object_lammps%nkinds
 end do
 
 end if
- 
+
 if ((this%flag_energy).and.(.not.this%flag_forces)) then
 
         if (.not.allocated(K_mat)) allocate(K_mat(N,1))
@@ -1223,10 +1300,6 @@ if (this%error>thresh) then
 
 flag_new_struct=.true.
 
- open(221,file="errors_predicted",action="write",position="append")
-  write(221,*) this%error
- close(221)
-
 open(111, file="new_geo_AL.xyz", action="write")
 
   write(111,*)this%object_lammps%nats
@@ -1238,18 +1311,18 @@ open(111, file="new_geo_AL.xyz", action="write")
 
 close(111)
 
-!open(111, file=trim(this%geometry_file), action="write",position='append')
-!     write(111,*)this%object_lammps%nats
-!  write(111,*)this%object_lammps%cell(1,:),this%object_lammps%cell(2,:),this%object_lammps%cell(3,:),&
-!                     this%object_lammps%nkinds
+open(111, file=trim(this%geometry_file), action="write",position='append')
+     write(111,*)this%object_lammps%nats
+  write(111,*)this%object_lammps%cell(1,:),this%object_lammps%cell(2,:),this%object_lammps%cell(3,:),&
+                     this%object_lammps%nkinds
 
-!  do j=1,this%object_lammps%nats
-!   write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3)), &
-!           this%object_lammps%kind(j),this%object_lammps%mass(this%object_lammps%kind(j))
-!  end do
+  do j=1,this%object_lammps%nats
+   write(111,*) this%object_lammps%label(this%object_lammps%kind(j)),vec(((j-1)*3)+1:(j*3)), &
+           this%object_lammps%kind(j),this%object_lammps%mass(this%object_lammps%kind(j))
+  end do
 
 
-!close(111)
+close(111)
 
 
 end if
