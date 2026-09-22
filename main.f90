@@ -90,6 +90,7 @@
         min_force_field%VdW_flag          = inp%VdW_flag
         min_force_field%coul_flag         = inp%coul_flag
         min_force_field%lr                = inp%lr
+        min_force_field%dump_rate         = inp%dump_rate
 
         call getcwd(cwd)
 
@@ -172,8 +173,8 @@
          call set(i)%grimme_d3(periodic_flag)
          do j=1,set(i)%nats
           do k=1,3
-           DFT_forces(((i-1)*set(i)%nats*3)&
-           +(j-1)*3+k)=DFT_forces(((i-1)*set(i)%nats*3) +(j-1)*3+k)-set(i)%grads(k,j)
+           DFT_forces(sum(set(1:i-1)%nats)*3 &
+           +(j-1)*3+k)=DFT_forces(sum(set(1:i-1)%nats)*3 +(j-1)*3+k)-set(i)%grads(k,j)
           end do
         end do
         deallocate(set(i)%grads)

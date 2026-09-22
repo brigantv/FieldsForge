@@ -22,6 +22,7 @@ module force_field_min_class
   integer                          :: twojmax_dip,twojmax_en
   integer                          :: num_bisp_en,num_bisp_dip
   integer                          :: nconfig_AL
+  integer                          :: dump_rate
   integer,dimension(4)             :: iseed
   integer,allocatable              :: fixed_atoms(:)
   double precision                 :: timestep
@@ -39,7 +40,7 @@ module force_field_min_class
   logical,dimension(:),allocatable :: coeff_mask_en,coeff_mask_dip
   double precision,dimension(:),allocatable :: tot_charge
   double precision, dimension(:,:),allocatable :: SNAP_prediction_matrix,SNAP_matrix_A
-  character(len=120)               :: dipoles_file,geometry_file,energy_file,record_file
+  character(len=120)               :: dipoles_file,geometry_file,energy_file,record_file, units
   logical                          :: VdW_flag, coul_flag
   logical                          :: minim_flag, md_flag, rampa_flag
   logical                          :: active_learn, shift_flag,post_AL
@@ -749,21 +750,11 @@ end do
 temp=(2.0d0*E_kin)/((3.0d0*(this%object_lammps%nats-sum(this%fixed_atoms))-3.0d0)*boltz)
 
 
-if (mod(iter,5)==0) then
-
-if (this%active_learn) then
+if (mod(iter,this%dump_rate)==0) then
 
 open(111, file="etotal_kin_pot_temp_molforge.txt", action="write",position="append")
-  write(111,*) E_kin*Har_to_kc+val, E_kin*Har_to_kc,val,temp,this%error
+  write(111,*) iter, E_kin*Har_to_kc+val, E_kin*Har_to_kc,val,temp
 close(111)
-
-else
-
-open(111, file="etotal_kin_pot_temp_molforge.txt", action="write",position="append")
-  write(111,*) E_kin*Har_to_kc+val, E_kin*Har_to_kc,val,temp
-close(111)
-
-end if
 
 open(111, file="traj_MD_molforge.xyz", action="write",position='append')
 
@@ -1052,7 +1043,7 @@ if (this%flag_forces) then
 
      do k=1,this%num_bisp_en-1
 
-        A(start_snap_force+(j-1)*this%set_AL(j)%nats*3+(l-1)*3+comp,this%num_bisp_en*(i-1)+1+k)=&
+        A(start_snap_force+sum(this%set_AL(1:j-1)%nats)*3+(l-1)*3+comp,this%num_bisp_en*(i-1)+1+k)=&
                 this%set_AL(j)%bisp_der((i-1)*((this%num_bisp_en-1)*3)+(this%num_bisp_en-1)*(comp-1)+k,l)
 
      end do

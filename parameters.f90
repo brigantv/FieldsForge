@@ -8,6 +8,6 @@ implicit none
  double precision, parameter     :: boltz=3.11811E-06
  double precision, parameter     :: amu_to_emass=1822.89d0
  double precision, parameter     :: Gpa_to_chem_units=0.143932619d0  ! this converts then units from GPa to kcal/mol*angstrom**3
-
+ double precision, parameter     :: kcal_mol_to_eV=0.0433634d0
 end module parameters
 

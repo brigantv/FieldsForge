@@ -191,15 +191,14 @@ if (flag_forces) then
   do i=1,set(j)%nkinds
 
    do l=1,set(j)%nats
-                        
     do comp=1,3
 
      do k=1,num_bisp-1 
    
-        A(start_snap_force+(j-1)*set(j)%nats*3+(l-1)*3+comp,num_bisp*(i-1)+1+k)=&
+        A(start_snap_force+3*sum(set(1:j-1)%nats)+(l-1)*3+comp,num_bisp*(i-1)+1+k)=&
                 set(j)%bisp_der((i-1)*((num_bisp-1)*3)+(num_bisp-1)*(comp-1)+k,l)
-
-     end do
+         
+    end do
 
     end do
   

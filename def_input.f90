@@ -48,6 +48,7 @@ module input_class
     ! MD
     logical            :: md_flag
     integer            :: nsteps
+    integer            :: dump_rate
     double precision   :: timestep           ! user: fs; stored: atomic time units (*41.49)
     double precision   :: temperature_in
     double precision   :: temperature_final
@@ -95,7 +96,7 @@ contains
     logical            :: ezero_en(MAX_KINDS), ezero_dip(MAX_KINDS)
     double precision   :: R_screen
     logical            :: md_flag, minim_flag, active_learn
-    integer            :: nsteps, max_iter_adam, nconfig_AL
+    integer            :: nsteps, max_iter_adam, nconfig_AL, dump_rate
     double precision   :: timestep, temperature_in, temperature_final
     integer            :: iseed(4)
     double precision   :: lr, sigma_AL, thresh_AL, factor_thresh
@@ -113,7 +114,7 @@ contains
       temperature_final, iseed, minim_flag, lr, max_iter_adam,          &
       active_learn, nconfig_AL, sigma_AL, thresh_AL, factor_thresh,     &
       n_mol, topology, fixed_atoms, rampa_flag, shift_flag, k_AL, C_M0, &
-      record_file
+      record_file, dump_rate
 
     ! Defaults (match the original hardcoded values in main.f90)
     train_ff          = .true.
@@ -162,6 +163,7 @@ contains
     shift_flag        = .false.
     k_AL              = 0.006d0
     C_M0              = 3.5d0          ! Angstroms
+    dump_rate         = 100
 
     open(99, file=trim(filename), status='old', action='read')
     read(99, nml=SNAP)
@@ -221,6 +223,7 @@ contains
     inp%shift_flag        = shift_flag
     inp%k_AL              = k_AL
     inp%C_M0              = C_M0
+    inp%dump_rate         = dump_rate
 
   end subroutine read_snap_input
 
