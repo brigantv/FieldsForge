@@ -91,6 +91,7 @@
         min_force_field%coul_flag         = inp%coul_flag
         min_force_field%lr                = inp%lr
         min_force_field%dump_rate         = inp%dump_rate
+        min_force_field%functional        = inp%functional
 
         call getcwd(cwd)
 
@@ -170,7 +171,7 @@
         if (VdW_flag) then
         do i=1,nconfig
          allocate(set(i)%grads(3,set(i)%nats))
-         call set(i)%grimme_d3(periodic_flag)
+         call set(i)%grimme_d3(periodic_flag,min_force_field%functional)
          do j=1,set(i)%nats
           do k=1,3
            DFT_forces(sum(set(1:i-1)%nats)*3 &

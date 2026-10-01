@@ -3,20 +3,21 @@
   !--------------------------------------------------------------------
   ! Workflow flags
   !--------------------------------------------------------------------
-  train_ff      = .true.		! fit of energy/forces/stress
-  periodic_flag = .true.		! enables PBC
-  VdW_flag      = .false.		! enables VdW corrections (D3 scheme)
-  coul_flag     = .false.		! fit of dipoles
+  train_ff      = .true.
+  periodic_flag = .true.
+  VdW_flag      = .true.
+  coul_flag     = .false.
+  functional    = "pbe"
 
   !--------------------------------------------------------------------
   ! Training data
   !--------------------------------------------------------------------
-  nconfig       = 79
-  geometry_file = "test_asmita/geo_tr_AL_++"
-  energy_file   = "test_asmita/ener_tr_AL_++"
-  forces_file   = "test_asmita/forces_tr_AL_++"
-  dipoles_file  = "test_asmita/dipoles_tr_AL_++"
-  record_file   = "test_asmita/Record.txt"
+  nconfig       = 29
+  geometry_file = "test_benzene/geo_val"
+  energy_file   = "test_benzene/ener_val"
+  forces_file   = "test_benzene/forces_val"
+  dipoles_file  = "test_benzene/dipoles_val"
+  record_file   = "test_benzene/Record.txt"
 
   !--------------------------------------------------------------------
   ! What to fit  (set_type: "TRAIN" fits and writes coefficients,
@@ -29,18 +30,18 @@
   set_type_dip = "TRAIN"
 
   !--------------------------------------------------------------------
-  ! SNAP energy descriptor 
+  ! SNAP energy descriptor
   !   ezero_en(i) = .true.  -> constrain E0 of species i to zero
   !   ezero_en(i) = .false. -> leave E0 of species i free
   !--------------------------------------------------------------------
-  twojmax_en = 8		
+  twojmax_en = 8
   cutoff_en  = 4.0          ! Angstroms
   lambda_en  = 0.1          ! L2 regularization
-  !weight     = 3.464101615137754      ! relative weight of energies vs forces, when set to sqrt(3*N_ats), energies and forces are treated equally
-  ezero_en   = .false., .true.	       ! (quite a technical feature, leave it as it is)
+  weight     = 3.464101615137754      ! relative weight of energies vs forces
+  ezero_en   = .false., .true.
 
   !--------------------------------------------------------------------
-  ! SNAP dipole descriptor (this section is reserved for the fit of dipole)
+  ! SNAP dipole descriptor
   !--------------------------------------------------------------------
   twojmax_dip = 8
   cutoff_dip  = 4.0         ! Angstroms
@@ -55,19 +56,20 @@
   !--------------------------------------------------------------------
   ! Molecular dynamics
   !--------------------------------------------------------------------
-  md_flag           = .true.
+  md_flag           = .false.
   nsteps            = 1000
-  timestep          = 1.0   ! femtoseconds
+  timestep          = 1.0   ! femtoseconds (converted to atomic time units internally)
   temperature_in    = 10.0  ! Kelvin (initial temperature)
-  temperature_final = 50.0  ! Kelvin (final temperature, it will be reached as soon as possible)
-  iseed             = 1216, 364, 1903, 4059 ! these 4 numbers determine the initial velocities of atoms
+  temperature_final = 50.0  ! Kelvin (for thermostat ramp, if rampa_flag = .true.)
+  iseed             = 1216, 364, 1903, 4059
+  dump_rate         = 100
 
   !--------------------------------------------------------------------
   ! Geometry minimization (Adam optimizer)
   !--------------------------------------------------------------------
   minim_flag    = .false.
   lr            = 0.001     ! Adam learning rate
-  max_iter_adam = 50000	    ! number of geometry steps
+  max_iter_adam = 500000
 
   !--------------------------------------------------------------------
   ! Active learning
@@ -75,9 +77,9 @@
   !   when the uncertainty exceeds thresh_AL. Set nconfig_AL = nconfig
   !   when not running active learning separately.
   !--------------------------------------------------------------------
-  active_learn  =.true.
-  nconfig_AL    = 79        ! set to 0 to default to nconfig automatically
-  factor_thresh = 1.0001     ! delta value for active learning
+  active_learn  =.false.
+  nconfig_AL    = 28     ! set to 0 to default to nconfig automatically
+  factor_thresh = 1.01
 
   !--------------------------------------------------------------------
   ! Molecule topology
@@ -86,6 +88,14 @@
   !   Only the first nats values are used; the rest are ignored.
   !--------------------------------------------------------------------
   n_mol      = 1
-  topology   = 18*1         ! ignore it if it is not important to specify atoms belonging to a molecule
-  fixed_atoms = 0, 10*0, 0  ! a list of 0 (atom ree to move) and 1 (atom fixed)
+  topology   = 18*1         ! all 18 atoms belong to molecule 1
+  fixed_atoms = 0, 10*0, 0  ! fix first and last atom
+
+  !--------------------------------------------------------------------
+  ! Misc
+  !--------------------------------------------------------------------
+  rampa_flag = .false.
+  shift_flag = .false.
+  k_AL       = 0.006        ! spring constant for center-of-mass restraint
+  C_M0       = 3.5          ! equilibrium COM distance in Angstroms
 /

@@ -72,6 +72,7 @@ module input_class
     integer            :: fixed_atoms(MAX_ATOMS)  ! 1 = fixed, 0 = free
 
     ! Misc
+    character(len=200) :: functional         ! the functional info is used when evaluating the D3 contributions
     logical            :: rampa_flag
     logical            :: shift_flag
     double precision   :: k_AL
@@ -88,7 +89,8 @@ contains
     ! Namelist mirrors (can't use derived-type fields directly in namelist)
     logical            :: train_ff, VdW_flag, coul_flag, periodic_flag
     integer            :: nconfig
-    character(len=200) :: geometry_file, energy_file, forces_file, dipoles_file,record_file
+    character(len=200) :: geometry_file, energy_file, forces_file, dipoles_file,record_file,&
+            functional
     logical            :: flag_energy, flag_forces, flag_stress
     character(len=5)   :: set_type_en, set_type_dip
     integer            :: twojmax_en, twojmax_dip
@@ -114,7 +116,7 @@ contains
       temperature_final, iseed, minim_flag, lr, max_iter_adam,          &
       active_learn, nconfig_AL, sigma_AL, thresh_AL, factor_thresh,     &
       n_mol, topology, fixed_atoms, rampa_flag, shift_flag, k_AL, C_M0, &
-      record_file, dump_rate
+      record_file, dump_rate,functional
 
     ! Defaults (match the original hardcoded values in main.f90)
     train_ff          = .true.
@@ -164,6 +166,7 @@ contains
     k_AL              = 0.006d0
     C_M0              = 3.5d0          ! Angstroms
     dump_rate         = 100
+    functional        ="pbe"
 
     open(99, file=trim(filename), status='old', action='read')
     read(99, nml=SNAP)
@@ -224,6 +227,7 @@ contains
     inp%k_AL              = k_AL
     inp%C_M0              = C_M0
     inp%dump_rate         = dump_rate
+    inp%functional        = functional
 
   end subroutine read_snap_input
 

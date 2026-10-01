@@ -41,6 +41,7 @@ module force_field_min_class
   double precision,dimension(:),allocatable :: tot_charge
   double precision, dimension(:,:),allocatable :: SNAP_prediction_matrix,SNAP_matrix_A
   character(len=120)               :: dipoles_file,geometry_file,energy_file,record_file, units
+  character(len=100)               :: functional
   logical                          :: VdW_flag, coul_flag
   logical                          :: minim_flag, md_flag, rampa_flag
   logical                          :: active_learn, shift_flag,post_AL
@@ -179,7 +180,7 @@ call this%object_lammps%get_bis(this%cutoff_en,this%twojmax_en)
 if (this%VdW_flag) then
 
  allocate(this%object_lammps%grads(3,this%object_lammps%nats))
- call this%object_lammps%grimme_d3(this%periodic_flag)
+ call this%object_lammps%grimme_d3(this%periodic_flag, this%functional)
 
 end if 
 

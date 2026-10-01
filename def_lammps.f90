@@ -459,7 +459,7 @@ end if flag1
 !end if
 end subroutine get_forces
 
-  subroutine grimme_d3(this,periodic_flag)
+  subroutine grimme_d3(this,periodic_flag,functional)
   use dftd3_api
   implicit none
 
@@ -488,6 +488,7 @@ end subroutine get_forces
   type(dftd3_input)             :: input
   type(dftd3_calc)              :: dftd3
   double precision              :: edisp
+  character(len=100)            :: functional
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Initialize input
@@ -511,7 +512,7 @@ end subroutine get_forces
 
   ! Choose functional. Alternatively you could set the parameters manually
   ! by the dftd3_set_params() function.
-  call dftd3_set_functional(dftd3, func='pbe', version=4, tz=.false.)
+  call dftd3_set_functional(dftd3, func=trim(functional), version=4, tz=.false.)
 
   allocate(atnum(this%nats))
   ! Convert species name to atomic number for each atom
