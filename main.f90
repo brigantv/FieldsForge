@@ -184,17 +184,18 @@
        DFT_forces=-DFT_forces*F_conv
         end if
 
-if (flag_stress) then
-allocate(DFT_stress(3*nconfig,3))
-!open(100,file=trim(stress_file))
-!do j=0,nconfig-1
-!        read(100,*) DFT_stress(3*j+1,:)
-!        read(100,*) DFT_stress(3*j+2,:)
-!        read(100,*) DFT_stress(3*j+3,:)
-!end do
-!close(100)
-end if
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       if (flag_stress) then
+        allocate(DFT_stress(3*nconfig,3))
+        !open(100,file=trim(stress_file))
+        !do j=0,nconfig-1
+        !        read(100,*) DFT_stress(3*j+1,:)
+        !        read(100,*) DFT_stress(3*j+2,:)
+        !        read(100,*) DFT_stress(3*j+3,:)
+        !end do
+        !close(100)
+        end if
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        
         do i=1,nconfig
 
          call lammps_open_no_mpi("lmp -screen none -log log.simple",set(i)%lmp)
@@ -238,7 +239,7 @@ end if
 
           end if
 
-               open(111, file='fit_energy_rms.dat', action='write')
+        open(111, file='fit_energy_rms.dat', action='write')
 
         if (flag_energy) then
 
@@ -250,15 +251,16 @@ end if
 
         end if
 
-if (flag_forces) then
+        if (flag_forces) then
 
          do i=1,3*tot_atom
 
           write(111,*) DFT_forces(i)
 
          end do
- end if
-close(111)
+        end if
+        
+        close(111)
 
         do i=1,nconfig
 
@@ -293,26 +295,25 @@ close(111)
 
         end if
 
- open(111,file="energie_fitting.dat",action="write")
- do i=1,min_force_field%nconfig_AL
+         open(111,file="energie_fitting.dat",action="write")
+         do i=1,min_force_field%nconfig_AL
 
                 if ((coul_flag).and.(VdW_flag)) then
 
-        write(111,*)  snap_energy+coul_energy+VdW_en
+                write(111,*)  snap_energy(i)+coul_energy(i)+VdW_en(i)
 
-        else if (coul_flag) then
+                else if (coul_flag) then
 
-write(111,*)  snap_energy+coul_energy
-         else if (VdW_flag) then
-write(111,*)  snap_energy+VdW_en
+        write(111,*)  snap_energy(i)+coul_energy(i)
+                 else if (VdW_flag) then
+        write(111,*)  snap_energy(i)+VdW_en(i)
 
         end if
 
- end do
+        end do
 
-end if
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        end if
+       
        do i=1,nconfig
 
         call lammps_open_no_mpi("lmp -screen none -log log.simple",set(i)%lmp)
