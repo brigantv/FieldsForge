@@ -4,7 +4,7 @@
   ! Workflow flags
   !--------------------------------------------------------------------
   train_ff      = .true.
-  periodic_flag = .true.
+  periodic_flag = .false.
   VdW_flag      = .true.
   coul_flag     = .false.
   functional    = "pbe"

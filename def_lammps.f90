@@ -527,7 +527,7 @@ end subroutine get_forces
   call dftd3_dispersion(dftd3, coords, atnum, this%edisp, this%grads)
   !write(*, "(A)") "*** Dispersion for non-periodic case"
   !open(111, file='VdW_ener_MolForge_20220225.txt',action='write',position='append')
-  !write(111,*)  this%edisp*Har_to_kc
+  !write(*,*)  this%edisp*Har_to_kc
   !close(111)
   !write(*, "(A)") "Gradients [au]:"
   !write(*, "(3ES20.12)") this%grads

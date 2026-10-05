@@ -206,10 +206,10 @@
         ! set(i)%Gcon=(4.0*PI)**2*set(i)%Gcon    !rescaling the metric tensor of the reciprocal lattice to
          call set(i)%get_bis(cutoff_dip,twojmax_dip)
 
-        ! if (.not.allocated(set(i)%grads)) allocate(set(i)%grads(3,set(i)%nats))
-        ! call set(i)%grimme_d3(periodic_flag)
-        ! VdW_en(i)=set(i)%edisp*Har_to_kc
-        ! deallocate(set(i)%grads)
+         if (.not.allocated(set(i)%grads)) allocate(set(i)%grads(3,set(i)%nats))
+         call set(i)%grimme_d3(periodic_flag, min_force_field%functional)
+         VdW_en(i)=set(i)%edisp*Har_to_kc
+         deallocate(set(i)%grads)
          call lammps_close(set(i)%lmp)
        end do
         call fit_dipoles(set,num_bisp_dip,trim(dipoles_file),lambda_dip,coeff_mask_dip,set_type_dip,tot_charge,&

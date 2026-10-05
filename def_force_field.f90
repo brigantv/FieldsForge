@@ -685,6 +685,10 @@ open(222,file="AL_stats.txt",action="write",position="append")
 
 close(222)
 
+open(111, file="etotal_kin_pot_temp_molforge.txt", action="write",position="append")
+  write(111,*) iter, E_kin*Har_to_kc+val, E_kin*Har_to_kc,val,temp
+close(111)
+
  stop
 
  end if
