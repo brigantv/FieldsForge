@@ -403,6 +403,13 @@ end subroutine init_vel
            gradres2(i)=this%beta2*gradres2(i)+(1-this%beta2)*this%grad(i)**2
            gradnorm=gradnorm+this%grad(i)**2
            enddo
+                
+           do i=1, this%object_lammps%nats
+               if (this%fixed_atoms(i)==1) then
+                gradres((i-1)*3+1: (i-1)*3+3)=0
+               end if
+           end do
+
 
            if(this%print_val) write(this%print_val_io,*) vec
            if(this%print_grad) write(this%print_grad_io,*) this%grad
@@ -414,7 +421,7 @@ end subroutine init_vel
             vec=vec-this%lr*(gradres/(1-this%beta1**(iter+1)))&
                  /(sqrt(gradres2/(1-this%beta2**(iter+1)))+this%eps)
            endif
-
+           
            if (this%active_learn) then
 
            call this%get_prediction_err(vec,this%thresh_AL,iter,flag_new_struct,this%flag_energy,&

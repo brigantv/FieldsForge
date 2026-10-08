@@ -26,8 +26,8 @@
   flag_energy  = .true.
   flag_forces  = .true.
   flag_stress  = .false.
-  set_type_en  = "TRAIN"
-  set_type_dip = "TRAIN"
+  set_type_en  = "VALID"
+  set_type_dip = "VALID"
 
   !--------------------------------------------------------------------
   ! SNAP energy descriptor
